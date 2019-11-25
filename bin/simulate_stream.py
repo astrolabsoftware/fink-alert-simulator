@@ -44,9 +44,21 @@ def main():
     # Grab data stored on disk
     files = glob.glob(os.path.join(root, "*.avro"))
 
+    # Number of observations, and total number of alerts to send.
     nobs = args.nobservations
     poolsize = args.nalerts_per_obs * nobs
-    if len(files) < poolsize:
+
+    if nobs == -1:
+        # Take all alerts available
+        nobs = int(len(files) / float(args.nalerts_per_obs)) + 1
+        poolsize = args.nalerts_per_obs * nobs
+        msg = """
+        All {} alerts to be sent (nobservations=-1), corresponding
+        to {} observations ({} alerts each).
+        """.format(len(files), nobs, args.nalerts_per_obs)
+        print(msg)
+    elif len(files) < poolsize:
+        # Send only available alerts
         nobs = int(len(files) / float(args.nalerts_per_obs)) + 1
         msg = """
         You ask for more data than you have!
@@ -56,12 +68,16 @@ def main():
         Hence, we reduced the number of observations to {}.
         """.format(root, len(files), poolsize, nobs)
         print(msg)
+
     print('Total alert available ({}): {}'.format(root, len(files)))
     print('Total alert to be sent: {}'.format(poolsize))
 
+    # Break the alert list into observations
     files = np.array_split(files[:poolsize], nobs)[:nobs]
 
+    # Starting time
     t0 = time.time()
+    print("t0: {}".format(t0))
 
     def send_visit(list_of_files):
         """ Send all alerts of an observation for publication in Kafka
@@ -71,7 +87,8 @@ def main():
         list_of_files: list of str
             List with filenames containing the alert (avro file)
         """
-        print('Observation start: t0 + : {} seconds'.format(time.time() - t0))
+        print('Observation start: t0 + : {:.2f} seconds'.format(
+            time.time() - t0))
         # Load alert contents
         startstop = []
         for index, fn in enumerate(list_of_files):
