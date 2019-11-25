@@ -6,7 +6,7 @@
 
 Fork and/or clone the repo, and update your PYTHONPATH and PATH to use the tools:
 
-```
+```bash
 # in your ~/.bash_profile
 export FINK_ALERT_SIMULATOR=/path/to/fink-alert-simulator
 export PYTHONPATH=$FINK_ALERT_SIMULATOR:$PYTHONPATH
