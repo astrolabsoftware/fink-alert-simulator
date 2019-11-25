@@ -4,7 +4,14 @@
 
 ## Installation
 
-TBD.
+Fork and/or clone the repo, and update your PYTHONPATH and PATH to use the tools:
+
+```
+# in your ~/.bash_profile
+export FINK_ALERT_SIMULATOR=/path/to/fink-alert-simulator
+export PYTHONPATH=$FINK_ALERT_SIMULATOR:$PYTHONPATH
+export PATH=$FINK_ALERT_SIMULATOR/bin:$PATH
+```
 
 ## Usage
 
