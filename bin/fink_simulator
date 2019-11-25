@@ -1,0 +1,85 @@
+#!/bin/bash
+# Copyright 2019 AstroLab Software
+# Author: Julien Peloton
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+set -e
+
+message_help="""
+Inject local alert data into Apache Kafka\n\n
+Usage:\n
+  \tfink_simulator [option] \n\n
+Option:\n
+  \t-c <conf> \n
+    \t\tTo use a custom configuration file \n\n
+  \t--docker \n
+    \t\t Spin up a local Kafka cluster to produce message (dockerised) \n\n
+  \t-h, --help \n
+    \t\tTo view this help message \n\n
+"""
+# Grab the command line arguments
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    "-h"|"--help")
+        echo -e $message_help
+        exit 0
+        ;;
+    -c)
+        if [[ $2 == "" || $2 == "-s" ]]; then
+          echo "$1 requires an argument: path to configuration file" >&2
+          exit 1
+        fi
+        conf="$2"
+        shift 2
+        ;;
+    --docker)
+        DOCKER=true
+        shift 1
+        ;;
+    -*)
+        echo "unknown option: $1" >&2
+        exit 1
+        ;;
+    *)
+        echo "unknown argument: $1" >&2
+        exit 1
+        ;;
+  esac
+done
+
+# Check if the conf file exists
+if [[ -f $conf ]]; then
+  echo "Reading custom configuration file from " $conf
+  source $conf
+else
+  echo "Reading default conf from " ${FINK_ALERT_SIMULATOR}/conf/fink_alert_simulator.conf
+  source ${FINK_ALERT_SIMULATOR}/conf/fink_alert_simulator.conf
+fi
+
+# Spin up docker Kafka cluster if needed.
+if [[ "$DOCKER" = true ]] ; then
+  KAFKA_IPPORT=$KAFKA_IPPORT_SIM
+  # kafka & zookeeper
+  export is_docker=`command -v docker-compose`
+  if [[ -f $is_docker ]]; then
+    KAFKA_PORT_SIM=${KAFKA_PORT_SIM} docker-compose -p kafkanet -f ${FINK_ALERT_SIMULATOR}/docker/docker-compose-kafka.yml up -d
+  else
+    echo "docker-compose not found"
+    exit
+  fi
+fi
+
+# Launch the simulator
+python3 ${FINK_ALERT_SIMULATOR}/bin/simulate_stream.py ${HELP_ON_SERVICE} \
+  -servers ${KAFKA_IPPORT} -topic ${KAFKA_TOPIC} -datasimpath ${FINK_DATA_SIM}\
+  -tinterval_kafka ${TIME_INTERVAL} -poolsize ${POOLSIZE}
