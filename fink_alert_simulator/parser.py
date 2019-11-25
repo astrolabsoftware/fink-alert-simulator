@@ -49,24 +49,30 @@ def getargs(parser: argparse.ArgumentParser) -> argparse.Namespace:
         [KAFKA_TOPIC/KAFKA_TOPIC_SIM]
         """)
     parser.add_argument(
-        '-tinterval_kafka', type=float, default=0.0,
+        '-tinterval_kafka', type=float, default=1.0,
         help="""
-        Time interval between two messages are published. In seconds.
+        Time interval between two observations are made. In seconds.
+        Each observation contains `nalerts_per_obs` alerts.
         [TIME_INTERVAL]
+        """)
+    parser.add_argument(
+        '-nalerts_per_obs', type=int, default=3,
+        help="""
+        Number of alerts to send simultaneously per observations.
+        [NALERTS_PER_OBS]
+        """)
+    parser.add_argument(
+        '-nobservations', type=int, default=3,
+        help="""
+        Total number of observations to perform. note that the total
+        number of alerts will be NALERTS_PER_OBS * NOBSERVATIONS
+        [NOBSERVATIONS]
         """)
     parser.add_argument(
         '-datasimpath', type=str, default='',
         help="""
         Folder containing simulated alerts to be published by Kafka.
         [FINK_DATA_SIM]
-        """)
-    parser.add_argument(
-        '-poolsize', type=int, default=5,
-        help="""
-        Maximum number of alerts to send. If the poolsize is
-        bigger than the number of alerts in `datapath`, then we replicate
-        the alerts. Default is 5.
-        [POOLSIZE]
         """)
     args = parser.parse_args(None)
     return args

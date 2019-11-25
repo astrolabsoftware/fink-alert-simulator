@@ -82,4 +82,4 @@ fi
 # Launch the simulator
 python3 ${FINK_ALERT_SIMULATOR}/bin/simulate_stream.py ${HELP_ON_SERVICE} \
   -servers ${KAFKA_IPPORT} -topic ${KAFKA_TOPIC} -datasimpath ${FINK_DATA_SIM}\
-  -tinterval_kafka ${TIME_INTERVAL} -poolsize ${POOLSIZE}
+  -tinterval_kafka ${TIME_INTERVAL} -nobservations ${NOBSERVATIONS} -nalerts_per_obs $NALERTS_PER_OBS

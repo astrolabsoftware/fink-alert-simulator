@@ -17,9 +17,13 @@
 """
 import argparse
 import os
+import sys
 import glob
 import time
 import asyncio
+
+import numpy as np
+
 from fink_alert_simulator import alertProducer
 from fink_alert_simulator import avroUtils
 
@@ -40,40 +44,58 @@ def main():
     # Grab data stored on disk
     files = glob.glob(os.path.join(root, "*.avro"))
 
-    # Replicate alerts if necessary
-    if len(files) < args.poolsize:
-        nreplication = args.poolsize // len(files) + 1
-        files = files * nreplication
+    poolsize = args.nalerts_per_obs * args.nobservations
+    if len(files) < poolsize:
+        msg = """
+        You ask for more data than you have!
+        Number of alerts on disk ({}): {}
+        Number of alerts required (nalerts_per_obs * nobservations): {}
 
-    def send_visit(fn):
-        """ Send alert for publication in Kafka
+        Either download more files, or reduce nalerts_per_obs or nobservations.
+        """.format(root, len(files), poolsize)
+        print(msg)
+        sys.exit()
+    print('Total alert available ({}): {}'.format(root, len(files)))
+    print('Total alert to be sent: {}'.format(poolsize))
+
+    files = np.array_split(
+        files[:poolsize],
+        args.nalerts_per_obs)[:args.nobservations]
+
+    def send_visit(list_of_files):
+        """ Send all alerts of an observation for publication in Kafka
 
         Parameters
         ----------
-        fn: str
-            Filename containing the alert (avro file)
+        list_of_files: list of str
+            List with filenames containing the alert (avro file)
         """
-        print('Alert sent - time: ', time.time())
+        print('Observation made - time: ', time.time())
         # Load alert contents
-        with open(fn, mode='rb') as file_data:
-            # Read the data
-            data = avroUtils.readschemadata(file_data)
+        startstop = []
+        for index, fn in enumerate(list_of_files):
+            with open(fn, mode='rb') as file_data:
+                # Read the data
+                data = avroUtils.readschemadata(file_data)
 
-            # Read the Schema
-            schema = data.schema
+                # Read the Schema
+                schema = data.schema
 
-            # Send the alerts
-            alert_count = 0
-            for record in data:
-                if alert_count < 10000:
-                    streamproducer.send(
-                        record, alert_schema=schema, encode=True)
-                    alert_count += 1
-                else:
-                    break
-        #     for record in data:
-        #         toto = record
-        # print(record['objectId'])
+                # assuming one record per data
+                record = data.next()
+                if index == 0 or index == len(list_of_files) - 1:
+                    startstop.append(record['objectId'])
+                streamproducer.send(record, alert_schema=schema, encode=True)
+
+                # Uncomment to debug
+                # print(record['objectId'])
+
+        print('{} alerts sent ({} to {})'.format(len(
+            list_of_files),
+            startstop[0],
+            startstop[1]))
+
+        # Trigger the producer
         streamproducer.flush()
 
     loop = asyncio.get_event_loop()
@@ -81,7 +103,7 @@ def main():
         alertProducer.schedule_delays(
             loop,
             send_visit,
-            files[:args.poolsize],
+            files,
             interval=args.tinterval_kafka))
     loop.run_forever()
     loop.close()
