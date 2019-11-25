@@ -84,7 +84,7 @@ def schedule_delays(
     for arg in argslist:
         wait_time = interval - (time.time() % interval)
         yield from asyncio.ensure_future(delay(wait_time, function, arg))
-        print('Alert sent: {}'.format(counter))
+        print('Observation {} done...'.format(counter))
         counter += 1
     eventloop.stop()
 
