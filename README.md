@@ -4,7 +4,7 @@
 
 ## Installation
 
-Fork and/or clone the repo, and update your PYTHONPATH and PATH to use the tools:
+Fork and/or clone the repo, and update your `PYTHONPATH` and `PATH` to use the tools:
 
 ```bash
 # in your ~/.bash_profile
@@ -13,6 +13,14 @@ export PYTHONPATH=$FINK_ALERT_SIMULATOR:$PYTHONPATH
 export PATH=$FINK_ALERT_SIMULATOR/bin:$PATH
 ```
 
+Note that you would need to have access to a Kafka cluster to publish alerts, otherwise you can use our docker version for local tests (you would need docker-compose installed).
+
 ## Usage
 
-Learn how to use fink-alert-simulator by following the dedicated tutorial (TBD).
+Simply use
+
+```bash
+fink_simulator [options] [-h]
+```
+
+Learn how to use fink-alert-simulator by following the dedicated [tutorial](https://fink-broker.readthedocs.io/en/latest/tutorials/simulator/).
