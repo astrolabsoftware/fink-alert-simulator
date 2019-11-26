@@ -13,8 +13,6 @@ export PYTHONPATH=$FINK_ALERT_SIMULATOR:$PYTHONPATH
 export PATH=$FINK_ALERT_SIMULATOR/bin:$PATH
 ```
 
-Note that you would need to have access to a Kafka cluster to publish alerts, otherwise you can use our docker version for local tests (you would need docker-compose installed).
-
 ## Usage
 
 Simply use
@@ -23,4 +21,4 @@ Simply use
 fink_simulator [options] [-h]
 ```
 
-Learn how to use fink-alert-simulator by following the dedicated [tutorial](https://fink-broker.readthedocs.io/en/latest/tutorials/simulator/).
+Note that you would need to have access to a Kafka cluster to publish alerts, otherwise you can use the docker version for local tests (you would need docker-compose installed). Learn more on how to use fink-alert-simulator by following the dedicated [tutorial](https://fink-broker.readthedocs.io/en/latest/tutorials/simulator/).
