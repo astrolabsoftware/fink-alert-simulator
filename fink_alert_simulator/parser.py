@@ -78,7 +78,10 @@ def getargs(parser: argparse.ArgumentParser) -> argparse.Namespace:
         '-to_display', type=str, default='None',
         help="""
         Alert field to display on the screen to follow the stream progression
-        Only top-level fields are accepted.
+        Field names should be comma-separated, starting from top-level.
+        e.g. for ZTF you would do `objectId` for displaying record[`objectId`],
+        and `candidate,jd` to display record['candidate']['jd']
+        If None, does not display anything.
         [DISPLAY_FIELD]
         """)
     args = parser.parse_args(None)
