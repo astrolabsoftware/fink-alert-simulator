@@ -106,7 +106,7 @@ def main():
                 """.format(fn)
                 raise NotImplementedError(msg)
 
-            with copen(fn, mode='rb') as file_data:
+            with copen(fn) as file_data:
                 # Read the data
                 data = avroUtils.readschemadata(file_data)
 
