@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Copyright 2019 AstroLab Software
+# Copyright 2019-2022 AstroLab Software
 # Author: Julien Peloton
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,7 +13,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Simulate batches of alerts coming from ZTF.
+"""Simulate batches of alerts coming from ZTF or ELaSTICC.
 """
 import argparse
 import os
@@ -21,6 +21,7 @@ import sys
 import glob
 import time
 import asyncio
+import gzip
 
 import numpy as np
 
@@ -42,7 +43,7 @@ def main():
     root = args.datasimpath
 
     # Grab data stored on disk
-    files = glob.glob(os.path.join(root, "*.avro"))
+    files = glob.glob(os.path.join(root, "*.avro*"))
 
     # Number of observations, and total number of alerts to send.
     nobs = args.nobservations
@@ -85,14 +86,27 @@ def main():
         Parameters
         ----------
         list_of_files: list of str
-            List with filenames containing the alert (avro file)
+            List with filenames containing the alert (avro file). Alerts
+            can be gzipped, but the extension should be
+            explicit (`avro` or `avro.gz`).
         """
         print('Observation start: t0 + : {:.2f} seconds'.format(
             time.time() - t0))
         # Load alert contents
         startstop = []
         for index, fn in enumerate(list_of_files):
-            with open(fn, mode='rb') as file_data:
+            if fn.endswith('avro'):
+                copen = lambda x: open(x, mode='rb')
+            elif fn.endswith('avro.gz'):
+                copen = lambda x: gzip.open(x, mode='rb')
+            else:
+                msg = """
+                Alert filename should end with `avro` or `avro.gz`.
+                Currently trying to read: {}
+                """.format(fn)
+                raise NotImplementedError(msg)
+
+            with copen(fn, mode='rb') as file_data:
                 # Read the data
                 data = avroUtils.readschemadata(file_data)
 
@@ -102,13 +116,15 @@ def main():
                 # assuming one record per data
                 record = data.next()
                 if index == 0 or index == len(list_of_files) - 1:
-                    startstop.append(record['objectId'])
+                    if args.to_display != 'None':
+                        startstop.append(record[args.to_display])
                 streamproducer.send(record, alert_schema=schema, encode=True)
 
-        print('{} alerts sent ({} to {})'.format(len(
-            list_of_files),
-            startstop[0],
-            startstop[1]))
+        if args.to_display != 'None':
+            print('{} alerts sent ({} to {})'.format(len(
+                list_of_files),
+                startstop[0],
+                startstop[1]))
 
         # Trigger the producer
         streamproducer.flush()
