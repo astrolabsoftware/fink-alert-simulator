@@ -117,7 +117,11 @@ def main():
                 record = data.next()
                 if index == 0 or index == len(list_of_files) - 1:
                     if args.to_display != 'None':
-                        startstop.append(record[args.to_display])
+                        fields = args.to_display.split(',')
+                        to_display = record[fields[0]]
+                        for field_ in fields[1:]:
+                            to_display = to_display[field_]
+                        startstop.append(to_display)
                 streamproducer.send(record, alert_schema=schema, encode=True)
 
         if args.to_display != 'None':
