@@ -74,6 +74,13 @@ def getargs(parser: argparse.ArgumentParser) -> argparse.Namespace:
         Folder containing simulated alerts to be published by Kafka.
         [FINK_DATA_SIM]
         """)
+    parser.add_argument(
+        '-to_display', type=str, default='None',
+        help="""
+        Alert field to display on the screen to follow the stream progression
+        Only top-level fields are accepted.
+        [DISPLAY_FIELD]
+        """)
     args = parser.parse_args(None)
     return args
 
