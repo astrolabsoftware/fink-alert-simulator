@@ -447,7 +447,7 @@ python poll_one_alert_elasticc.py $SCHEMAPATH
 
 Bingo! You can even plot the resulting lightcurve:
 
-![1161.png](../_resources/1161.png)
+![1161.png](1161.png)
 
 ## Concretely for DESC
 
