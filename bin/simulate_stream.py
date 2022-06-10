@@ -114,7 +114,7 @@ def main():
                 schema = data.schema
 
                 # assuming one record per data
-                record = data.next()
+                record = next(data)
                 if index == 0 or index == len(list_of_files) - 1:
                     if args.to_display != 'None':
                         fields = args.to_display.split(',')
