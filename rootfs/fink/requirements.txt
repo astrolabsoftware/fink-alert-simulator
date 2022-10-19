@@ -1,0 +1,4 @@
+avro==1.11.1
+confluent-kafka==1.9.2
+fastavro==1.6.1
+numpy==1.23.4

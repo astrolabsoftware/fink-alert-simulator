@@ -1,0 +1,136 @@
+# Qserv operator CI workflow
+---
+name: "CI"
+on:
+  push:
+  pull_request:
+    branches:
+      - main
+jobs:
+  build:
+    name: Build image
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Declare Variables
+        id: vars
+        shell: bash
+        run: |
+          DIR="$PWD"
+          . ./conf.sh
+          echo "IMAGE=${IMAGE}" >> $GITHUB_ENV
+          echo "IMAGE=${IMAGE}"
+      - name: Build fink-alert-simulator image
+        run: |
+          ./build.sh
+      - name: Export fink-alert-simulator image
+        run: |
+          docker images
+          echo "${{ env.IMAGE }}"
+          mkdir -p artifacts
+          docker save "${{ env.IMAGE }}" > artifacts/image.tar
+          echo "${{ env.IMAGE }}" > artifacts/image-tag
+      - uses: actions/upload-artifact@v2
+        with:
+          name: docker-artifact
+          path: artifacts
+  itest:
+    name: Run integration tests
+    runs-on: ubuntu-22.04
+    needs: build
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Declare Version Variables
+        id: vars
+        shell: bash
+        run: |
+          echo "IMAGE=$(. ./conf.sh && echo $IMAGE)" >> $GITHUB_ENV
+          echo "IMAGE=${IMAGE}"
+          echo "FINK_BROKER_DIR=$(. ./conf.sh && echo $FINK_BROKER_DIR)" >> $GITHUB_ENV
+      - name: Create k8s/kind cluster
+        run: |
+          git clone --depth 1 -b "k8s-1.25.0" --single-branch https://github.com/k8s-school/kind-helper.git
+          ./kind-helper/k8s-create.sh -s
+      - name: Download image
+        uses: actions/download-artifact@v2
+        with:
+          name: docker-artifact
+          path: artifacts
+      - name: Load container image inside kind
+        run: |
+          kind load image-archive artifacts/image.tar
+          docker exec -- kind-control-plane crictl image
+      - name: Install pre-requisites (argoCD)
+        run: ./prereq-install.sh
+      - name: Install fink-broker
+        run: ./itest/install-fink.sh
+      - name: Run fink-alert-simulator
+        run: |
+          ./argo-submit.sh
+          argo watch @latest
+      # - name: Setup tmate session
+      # uses: mxschmitt/action-tmate@v3
+      - name: Run fink-broker
+        run: |
+          "${{ env.FINK_BROKER_DIR }}"/bin/itest.sh
+  image-analysis:
+    name: Analyze image
+    runs-on: ubuntu-22.04
+    permissions:
+      security-events: write
+    needs: build
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Download image
+        uses: actions/download-artifact@v2
+        with:
+          name: docker-artifact
+          path: artifacts
+      - name: Load image in local registry
+        run: |
+          docker load --input artifacts/image.tar
+          echo "IMAGE=$(cat artifacts/artifacts/image-tag)" >> $GITHUB_ENV
+      - name: Scan Fink image
+        uses: anchore/scan-action@v3
+        id: scan
+        with:
+          image: "${{ env.IMAGE }}"
+          fail-build: false
+      - name: Display SARIF report
+        run: |
+          cat ${{ steps.scan.outputs.sarif }}
+      - name: upload Anchore scan SARIF report
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: ${{ steps.scan.outputs.sarif }}
+  push:
+    name: Push image to registry
+    runs-on: ubuntu-22.04
+    needs: itest
+    steps:
+      - name: Download image
+        uses: actions/download-artifact@v2
+        with:
+          name: docker-artifact
+          path: artifacts
+      - name: Load image in local registry
+        run: |
+          docker load --input artifacts/image.tar
+          echo "IMAGE=$(cat artifacts/image-tag)" >> $GITHUB_ENV
+      - name: Login to DockerHub
+        uses: docker/login-action@v2
+        with:
+          registry: gitlab-registry.in2p3.fr
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_TOKEN }}
+      - name: Push image to container registry
+        run: |
+          docker push ${{ env.IMAGE }}
+
