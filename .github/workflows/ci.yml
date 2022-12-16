@@ -58,7 +58,7 @@ jobs:
           git clone --depth 1 -b "k8s-1.25.0" --single-branch https://github.com/k8s-school/kind-helper.git
           ./kind-helper/k8s-create.sh -s
       - name: Download image
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: docker-artifact
           path: artifacts
@@ -89,7 +89,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
       - name: Download image
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: docker-artifact
           path: artifacts
@@ -116,7 +116,7 @@ jobs:
     needs: itest
     steps:
       - name: Download image
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: docker-artifact
           path: artifacts
