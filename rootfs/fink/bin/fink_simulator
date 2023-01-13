@@ -1,4 +1,5 @@
 #!/bin/bash
+
 # Copyright 2019 AstroLab Software
 # Author: Julien Peloton
 #
@@ -13,7 +14,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-set -e
+
+set -euo pipefail
+
+docker=${DOCKER:-false}
 
 message_help="""
 Inject local alert data into Apache Kafka\n\n
@@ -67,7 +71,7 @@ else
 fi
 
 # Spin up docker Kafka cluster if needed.
-if [[ "$DOCKER" = true ]] ; then
+if [[ "$docker" = true ]] ; then
   KAFKA_IPPORT=$KAFKA_IPPORT_SIM
   # kafka & zookeeper
   export is_docker=`command -v docker-compose`
@@ -80,7 +84,7 @@ if [[ "$DOCKER" = true ]] ; then
 fi
 
 # Launch the simulator
-python3 ${FINK_ALERT_SIMULATOR}/bin/simulate_stream.py ${HELP_ON_SERVICE} \
+simulate_stream \
   -servers ${KAFKA_IPPORT} -topic ${KAFKA_TOPIC} -datasimpath ${FINK_DATA_SIM}\
   -tinterval_kafka ${TIME_INTERVAL} -nobservations ${NOBSERVATIONS}\
   -nalerts_per_obs $NALERTS_PER_OBS -to_display ${DISPLAY_FIELD}

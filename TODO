@@ -1,0 +1,7 @@
+kubectl get nodes --output=jsonpath='{range .items[*]}{.status.addresses[?(@.type=="InternalIP")].address}{"\n"}{end}'
+kubectl get service kafka-cluster-kafka-external-bootstrap -n kafka -o=jsonpath='{.spec.ports[0].nodePort}{"\n"}'
+python3 -m venv  $PWD/venv
+pip install -r requirements.txt
+
+# Generate conf/fink_alert_simulator.conf
+
