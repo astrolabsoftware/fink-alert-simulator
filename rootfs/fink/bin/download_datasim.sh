@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright 2022 AstroLab Software
+# Copyright 2023 AstroLab Software
 # Author: Julien Peloton
 # Author: Fabrice Jammes
 #
@@ -16,16 +16,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Download datasim dataset from GitHub to /datasim
+
 set -euxo pipefail
 
-archive="ztf_public_20190903.tar.gz"
+data_subpath="datasim/basic_alerts/local"
 datasim_path="/datasim"
+workdir="/tmp/fink-broker"
 
-# Download subset of ZTF public data - 22 MB (zipped)
-curl -Lo /tmp/${archive} https://ztf.uw.edu/alerts/public/${archive}
+git clone --single-branch -b "ztf_dataset_v1" -n --depth=1 --filter=tree:0 \
+  https://github.com/astrolabsoftware/fink-broker.git "$workdir"
+git -C "$workdir" sparse-checkout set --no-cone "$data_subpath"
+git -C "$workdir" checkout
 
-# Untar the alert data - 55 MB
-tar -zxvf /tmp/${archive} -C $datasim_path
-rm /tmp/${archive}
-
-echo "Extract $archive to $datasim_path"
+echo "Download dataset to $datasim_path"
+mv "$workdir/$data_subpath" "$datasim_path"
