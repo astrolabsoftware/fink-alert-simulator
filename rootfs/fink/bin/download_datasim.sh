@@ -30,4 +30,4 @@ git -C "$workdir" sparse-checkout set --no-cone "$data_subpath"
 git -C "$workdir" checkout
 
 echo "Download dataset to $datasim_path"
-mv "$workdir/$data_subpath" "$datasim_path"
+mv "$workdir/$data_subpath"/* "$datasim_path"
