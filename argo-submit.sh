@@ -49,4 +49,4 @@ if [ ! -d "$cfg_path" ]; then
 fi
 
 kubectl apply -k "$cfg_path"
-argo submit -p image="$IMAGE" -p verbose=2 --entrypoint $entrypoint -vvv $DIR/manifests/workflow.yaml
+argo submit -p image="$IMAGE" -p verbose=2 --entrypoint $entrypoint -vvv $DIR/manifests/workflow-sleep.yaml
