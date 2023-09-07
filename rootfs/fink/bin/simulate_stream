@@ -40,6 +40,9 @@ def main():
     streamproducer = alertProducer.AlertProducer(
         args.topic, schema_files=None, **conf)
 
+    if args.external_schema != 'None':
+        schema = fastavro.schema.load_schema(args.external_schema)
+
     # Scan for avro files
     root = args.datasimpath
 
