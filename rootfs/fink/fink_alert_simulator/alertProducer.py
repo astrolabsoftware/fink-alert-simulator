@@ -17,7 +17,6 @@ import time
 import os
 import sys
 import asyncio
-import fastavro
 
 from typing import Any
 from types import FunctionType
