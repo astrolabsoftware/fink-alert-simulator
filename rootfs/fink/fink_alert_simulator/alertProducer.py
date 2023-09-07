@@ -142,6 +142,7 @@ class AlertProducer(object):
         """
         if encode is True:
             if alert_schema is None:
+                # BUG: self.alert_schema is never defined
                 avro_bytes = avroUtils.writeavrodata(data, self.alert_schema)
             else:
                 avro_bytes = avroUtils.writeavrodata(data, alert_schema)
