@@ -8,7 +8,7 @@ on:
       - main
 env:
   CIUXCONFIG: /tmp/ciux.sh
-  CIUX_VERSION: v0.0.1-rc7
+  CIUX_VERSION: v0.0.1-rc11
 jobs:
   build:
     name: Build image
