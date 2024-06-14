@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Copyright 2019-2022 AstroLab Software
+# Copyright 2019-2023 AstroLab Software
 # Author: Julien Peloton
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,6 +22,7 @@ import glob
 import time
 import asyncio
 import gzip
+import fastavro
 
 import numpy as np
 
@@ -38,6 +39,9 @@ def main():
     conf = {'bootstrap.servers': args.servers}
     streamproducer = alertProducer.AlertProducer(
         args.topic, schema_files=None, **conf)
+
+    if args.external_schema != 'None':
+        schema = fastavro.schema.load_schema(args.external_schema)
 
     # Scan for avro files
     root = args.datasimpath
@@ -80,7 +84,7 @@ def main():
     t0 = time.time()
     print("t0: {}".format(t0))
 
-    def send_visit(list_of_files):
+    def send_visit_internal_schema(list_of_files):
         """ Send all alerts of an observation for publication in Kafka
 
         Parameters
@@ -132,6 +136,50 @@ def main():
 
         # Trigger the producer
         streamproducer.flush()
+
+    def send_visit_external_schema(list_of_files):
+        """ Send all alerts of an observation for publication in Kafka
+
+        Requires external schema to be defined.
+
+        Parameters
+        ----------
+        list_of_files: list of str
+            List with filenames containing the alert (avro file). Alerts
+            can be gzipped, but the extension should be
+            explicit (`avro` or `avro.gz`).
+        """
+        print('Observation start: t0 + : {:.2f} seconds'.format(
+            time.time() - t0))
+        # Load alert contents
+        startstop = []
+        for index, fn in enumerate(list_of_files):
+            with open(fn, 'rb') as fp:
+                record = fastavro.schemaless_reader(fp, schema)
+
+                if index == 0 or index == len(list_of_files) - 1:
+                    if args.to_display != 'None':
+                        fields = args.to_display.split(',')
+                        to_display = record[fields[0]]
+                        for field_ in fields[1:]:
+                            to_display = to_display[field_]
+                        startstop.append(to_display)
+                streamproducer.send(record, alert_schema=schema, encode=True)
+
+        if args.to_display != 'None':
+            print('{} alerts sent ({} to {})'.format(len(
+                list_of_files),
+                startstop[0],
+                startstop[1]))
+
+        # Trigger the producer
+        streamproducer.flush()
+
+
+    if args.external_schema != 'None':
+        send_visit = send_visit_external_schema
+    else:
+        send_visit = send_visit_internal_schema
 
     loop = asyncio.get_event_loop()
     asyncio.ensure_future(

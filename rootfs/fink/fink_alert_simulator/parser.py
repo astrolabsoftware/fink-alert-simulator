@@ -84,6 +84,13 @@ def getargs(parser: argparse.ArgumentParser) -> argparse.Namespace:
         If None, does not display anything.
         [DISPLAY_FIELD]
         """)
+    parser.add_argument(
+        '-external_schema', type=str, default='None',
+        help="""
+        If provided, the avro schema (.avsc) will be used to read alerts.
+        [EXTERNAL_SCHEMA]
+        """
+    )
     args = parser.parse_args(None)
     return args
 
