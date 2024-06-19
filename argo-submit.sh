@@ -29,9 +29,9 @@ overlay='base'
 # get the options
 while getopts hibst: c ; do
     case $c in
-	    h) usage ; exit 0 ;;
+      h) usage ; exit 0 ;;
       t) overlay="${OPTARG}"  ;;
-	    \?) usage ; exit 2 ;;
+      \?) usage ; exit 2 ;;
     esac
 done
 shift `expr $OPTIND - 1`
