@@ -48,5 +48,5 @@ if [ ! -d "$cfg_path" ]; then
     exit 1
 fi
 
-kubectl apply -k "$cfg_path"
-argo submit -p image="$IMAGE" -p verbose=2 --entrypoint $entrypoint -vvv $DIR/manifests/workflow.yaml
+kubectl apply -n argo -k "$cfg_path"
+argo submit -n argo -p image="$IMAGE" -p verbose=2 --entrypoint $entrypoint -vvv $DIR/manifests/workflow.yaml
