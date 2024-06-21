@@ -26,6 +26,8 @@ user=''
 entrypoint='main'
 overlay='base'
 
+NS="argo"
+
 # get the options
 while getopts hibst: c ; do
     case $c in
@@ -48,5 +50,5 @@ if [ ! -d "$cfg_path" ]; then
     exit 1
 fi
 
-kubectl apply -n argo -k "$cfg_path"
-argo submit -n argo -p image="$IMAGE" -p verbose=2 --entrypoint $entrypoint -vvv $DIR/manifests/workflow.yaml
+kubectl apply -n "$NS" -k "$cfg_path"
+argo submit --serviceaccount argo -n "$NS" -p image="$IMAGE" -p verbose=2 --entrypoint $entrypoint -vvv $DIR/manifests/workflow.yaml
