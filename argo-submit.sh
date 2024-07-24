@@ -5,7 +5,6 @@
 set -euxo pipefail
 
 DIR=$(cd "$(dirname "$0")"; pwd -P)
-. $DIR/conf.sh
 
 usage() {
   cat << EOD
@@ -29,10 +28,11 @@ overlay='base'
 NS="argo"
 
 # get the options
-while getopts hibst: c ; do
+while getopts ht:i: c ; do
     case $c in
       h) usage ; exit 0 ;;
       t) overlay="${OPTARG}"  ;;
+      i) image="${OPTARG}" ;;
       \?) usage ; exit 2 ;;
     esac
 done
@@ -43,6 +43,13 @@ if [ $# -ne 0 ] ; then
     exit 2
 fi
 
+if [ -z "$image" ]; then
+    echo "WARN: image not defined" 1>&2;
+    . $DIR/conf.sh
+    image=$FINK_ALERT_SIMULATOR_IMAGE
+    exit 1
+fi
+
 cfg_path="$DIR/manifests/$overlay/configmap"
 
 if [ ! -d "$cfg_path" ]; then
@@ -51,4 +58,4 @@ if [ ! -d "$cfg_path" ]; then
 fi
 
 kubectl apply -n "$NS" -k "$cfg_path"
-argo submit --serviceaccount argo -n "$NS" -p image="$IMAGE" -p verbose=2 --entrypoint $entrypoint -vvv $DIR/manifests/workflow.yaml
+argo submit --serviceaccount argo -n "$NS" -p image="$image" -p verbose=2 --entrypoint $entrypoint -vvv $DIR/manifests/workflow.yaml

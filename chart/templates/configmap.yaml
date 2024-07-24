@@ -1,0 +1,57 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    app: fink
+    kustomize.generated.resources: fink.alert-simulator
+    org: astrolabsoftware
+  name: fink-alert-simulator
+data:
+  start.sh: |
+    #!/bin/bash
+
+    set -euxo pipefail
+
+    # Kafka producer stream configuration
+
+    # Cluster mode - require a Kafka cluster installed with write mode.
+
+    KAFKA_IPPORT="{{ .Values.kafka.socket }}"
+
+    # Topic name for the producer
+    KAFKA_TOPIC="{{ .Values.kafka.topic }}"
+
+    # Where the data for sims is
+    FINK_DATA_SIM="/datasim"
+
+    # Which alert field to display on the screen to follow the stream progression
+    # Field names should be comma-separated, starting from top-level.
+    # e.g. for ZTF you would do `objectId` for displaying record[`objectId`], but
+    # `candidate,jd` to display record['candidate']['jd']
+    # If None, does not display anything.
+    DISPLAY_FIELD="objectId"
+
+    # Number of alerts to send simultaneously per observations.
+    NALERTS_PER_OBS=3
+
+    # Number of observations to make. Note that the total
+    # number of alerts will be NALERTS_PER_OBS * NOBSERVATIONS
+    # Set it to -1 if you want all alerts to be sent.
+    NOBSERVATIONS=4
+
+    # Time between 2 observations (second)
+    TIME_INTERVAL=5
+
+    # Path to external avro schema. 'None' if not required.
+    EXTERNAL_SCHEMA='None'
+
+    simulate_stream \
+      -servers ${KAFKA_IPPORT} \
+      -topic ${KAFKA_TOPIC} \
+      -datasimpath ${FINK_DATA_SIM} \
+      -tinterval_kafka ${TIME_INTERVAL} \
+      -nobservations ${NOBSERVATIONS} \
+      -nalerts_per_obs $NALERTS_PER_OBS \
+      -external_schema=${EXTERNAL_SCHEMA} \
+      -to_display ${DISPLAY_FIELD}
+
