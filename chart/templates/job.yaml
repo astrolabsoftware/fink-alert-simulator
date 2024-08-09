@@ -2,6 +2,7 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   creationTimestamp: null
+  # generateName: fink-alert-simulator-
   name: fink-alert-simulator-{{ now | date "20060102150405" }}
 spec:
   template:
@@ -29,7 +30,6 @@ spec:
             mountPath: /config
           - name: datasim
             mountPath: /datasim
-
       volumes:
       - name: datasim
         emptyDir: {}

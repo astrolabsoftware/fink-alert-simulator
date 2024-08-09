@@ -13,6 +13,8 @@ jobs:
   build:
     name: Build image
     runs-on: ubuntu-22.04
+    outputs:
+      image: ${{ steps.export.outputs.IMAGE }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -37,12 +39,20 @@ jobs:
         run: |
           ./build.sh
       - name: Export fink-alert-simulator image
+        id: export
         run: |
-          docker images
-          echo "${{ env.IMAGE }}"
+          # TODO make it simpler!
+          $(ciux get image --check $PWD --env)
           mkdir -p artifacts
-          docker save "${{ env.IMAGE }}" > artifacts/image.tar
-          echo "${{ env.IMAGE }}" > artifacts/image-tag
+          if [ $CIUX_BUILD = true ]; then
+              echo "Export $CIUX_IMAGE_URL to Github artifact store"
+              docker save "$CIUX_IMAGE_URL" > artifacts/image.tar
+            fi
+          else
+            echo "Using existing image $CIUX_IMAGE_URL"
+            touch artifacts/empty
+          fi
+          echo "IMAGE=$CIUX_IMAGE_URL" >> "$GITHUB_OUTPUT"
       - uses: actions/upload-artifact@v2
         with:
           name: docker-artifact
@@ -63,21 +73,26 @@ jobs:
           path: artifacts
       - name: Load image in local registry
         run: |
-          docker load --input artifacts/image.tar
-          echo "IMAGE=$(cat artifacts/artifacts/image-tag)" >> $GITHUB_ENV
-      - name: Scan Fink image
+          if [ -f artifacts/image.tar ]; then
+            echo "Loading image ${{ needs.build.outputs.image }} from archive"
+            docker load --input artifacts/image.tar
+          else
+            echo "Using existing image ${{ needs.build.outputs.image }}"
+          fi
+      - name: Scan fink-alert-simulator image
         uses: anchore/scan-action@v3
         id: scan
         with:
-          image: "${{ env.IMAGE }}"
+          image: "${{ needs.build.outputs.image }}"
           fail-build: false
       - name: Display SARIF report
         run: |
           cat ${{ steps.scan.outputs.sarif }}
       - name: upload Anchore scan SARIF report
-        uses: github/codeql-action/upload-sarif@v2
+        uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: ${{ steps.scan.outputs.sarif }}
+
   push:
     name: Push image to registry
     runs-on: ubuntu-22.04
