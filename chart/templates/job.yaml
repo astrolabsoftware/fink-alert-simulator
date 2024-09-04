@@ -1,0 +1,38 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: fink-alert-simulator
+  annotations:
+    argocd.argoproj.io/sync-options: Force=true,Replace=true
+  labels:
+    kubernetes.io/app: fink-alert-simulator
+spec:
+  template:
+    spec:
+      restartPolicy: OnFailure
+      initContainers:
+        - name: download
+          image: "{{ .Values.image.repository }}/{{ .Values.image.name }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: "{{ .Values.image.pullPolicy}}"
+          command: ["download_datasim.sh"]
+          volumeMounts:
+          - mountPath: /datasim
+            name: datasim
+      containers:
+        - name: main
+          image: "{{ .Values.image.repository }}/{{ .Values.image.name }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: "{{ .Values.image.pullPolicy}}"
+          command: ["/config/start.sh"]
+          args: ["-c", "/config/fink_alert_simulator.conf"]
+          volumeMounts:
+          - name: config
+            mountPath: /config
+          - name: datasim
+            mountPath: /datasim
+      volumes:
+      - name: datasim
+        emptyDir: {}
+      - name: config
+        configMap:
+          name: fink-alert-simulator
+          defaultMode: 0777
