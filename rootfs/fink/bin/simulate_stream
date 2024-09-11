@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Copyright 2019-2023 AstroLab Software
+# Copyright 2019-2024 AstroLab Software
 # Author: Julien Peloton
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -110,6 +110,9 @@ def main():
                 """.format(fn)
                 raise NotImplementedError(msg)
 
+            # assign a partition number
+            partition = np.random.randint(low=0, high=args.npartitions)
+
             with copen(fn) as file_data:
                 # Read the data
                 data = avroUtils.readschemadata(file_data)
@@ -126,7 +129,7 @@ def main():
                         for field_ in fields[1:]:
                             to_display = to_display[field_]
                         startstop.append(to_display)
-                streamproducer.send(record, alert_schema=schema, encode=True)
+                streamproducer.send(record, alert_schema=schema, partition=partition, encode=True)
 
         if args.to_display != 'None':
             print('{} alerts sent ({} to {})'.format(len(
@@ -157,6 +160,9 @@ def main():
             with open(fn, 'rb') as fp:
                 record = fastavro.schemaless_reader(fp, schema)
 
+                # assign a partition number
+                partition = np.random.randint(low=0, high=args.npartitions)
+
                 if index == 0 or index == len(list_of_files) - 1:
                     if args.to_display != 'None':
                         fields = args.to_display.split(',')
@@ -164,7 +170,7 @@ def main():
                         for field_ in fields[1:]:
                             to_display = to_display[field_]
                         startstop.append(to_display)
-                streamproducer.send(record, alert_schema=schema, encode=True)
+                streamproducer.send(record, alert_schema=schema, partition=partition, encode=True)
 
         if args.to_display != 'None':
             print('{} alerts sent ({} to {})'.format(len(
