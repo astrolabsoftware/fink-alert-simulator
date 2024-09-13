@@ -20,11 +20,11 @@
 
 set -euxo pipefail
 
-data_subpath="datasim/basic_alerts/local"
+data_subpath="datasim/basic_alerts/all_distribute_topics"
 datasim_path="/datasim"
 workdir="/tmp/fink-broker"
 
-git clone --single-branch -b "ztf_dataset_v1" -n --depth=1 --filter=tree:0 \
+git clone --single-branch -b "ztf_dataset_v2" -n --depth=1 --filter=tree:0 \
   https://github.com/astrolabsoftware/fink-broker.git "$workdir"
 git -C "$workdir" sparse-checkout set --no-cone "$data_subpath"
 git -C "$workdir" checkout
