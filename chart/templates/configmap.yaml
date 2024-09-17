@@ -32,7 +32,7 @@ data:
     DISPLAY_FIELD="objectId"
 
     # Number of alerts to send simultaneously per observations.
-    NALERTS_PER_OBS=3
+    NALERTS_PER_OBS=300
 
     # Number of observations to make. Note that the total
     # number of alerts will be NALERTS_PER_OBS * NOBSERVATIONS
