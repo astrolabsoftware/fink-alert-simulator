@@ -49,7 +49,7 @@ ciux ignite $DIR
 . $CIUXCONFIG
 
 # Build image
-docker image build --tag "$CIUX_IMAGE_URL"
+docker image build --tag "$CIUX_IMAGE_URL" "$DIR"
 
 echo "Build successful"
 

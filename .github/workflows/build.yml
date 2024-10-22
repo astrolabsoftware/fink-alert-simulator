@@ -46,7 +46,7 @@ jobs:
           fi
           echo "IMAGE=$CIUX_IMAGE_URL" >> "$GITHUB_OUTPUT"
           echo "PROMOTED_IMAGE=$CIUX_PROMOTED_IMAGE_URL" >> "$GITHUB_OUTPUT"
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
           name: docker-artifact
           path: artifacts
@@ -60,7 +60,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
       - name: Download image
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: docker-artifact
           path: artifacts
@@ -91,7 +91,7 @@ jobs:
     needs: build
     steps:
       - name: Download image
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: docker-artifact
           path: artifacts
