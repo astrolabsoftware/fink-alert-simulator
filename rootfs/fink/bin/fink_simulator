@@ -86,6 +86,6 @@ fi
 # Launch the simulator
 simulate_stream \
   -servers ${KAFKA_IPPORT} -topic ${KAFKA_TOPIC} -datasimpath ${FINK_DATA_SIM}\
-  -tinterval_kafka ${TIME_INTERVAL} -nobservations ${NOBSERVATIONS}\
+  -tinterval_kafka ${TIME_INTERVAL} -nobservations ${NOBSERVATIONS} -npartitions ${NPARTITIONS}\
   -nalerts_per_obs $NALERTS_PER_OBS -external_schema=${EXTERNAL_SCHEMA}\
   -to_display ${DISPLAY_FIELD}
