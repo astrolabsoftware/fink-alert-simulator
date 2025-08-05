@@ -2,3 +2,4 @@ avro==1.11.3
 confluent-kafka==1.9.2
 fastavro==1.6.1
 numpy==1.23.4
+cramjam==2.11.0
