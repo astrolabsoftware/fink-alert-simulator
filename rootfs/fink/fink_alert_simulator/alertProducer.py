@@ -26,8 +26,7 @@ from fink_alert_simulator.tester import regular_unit_tests
 
 __all__ = ['AlertProducer', 'delay', 'schedule_delays']
 
-@asyncio.coroutine
-def delay(wait_sec: float, function: FunctionType, *args) -> Any: # NOSONAR
+async def delay(wait_sec: float, function: FunctionType, *args) -> Any: # NOSONAR
     """Sleep for a given time before calling a function.
 
     NOTE: we are mixing the use of yield from & return here for good reasons.
@@ -49,11 +48,10 @@ def delay(wait_sec: float, function: FunctionType, *args) -> Any: # NOSONAR
     Examples
     ----------
     """
-    yield from asyncio.sleep(wait_sec) # NOSONAR
+    await asyncio.sleep(wait_sec) # NOSONAR
     return function(*args) # NOSONAR
 
-@asyncio.coroutine
-def schedule_delays(
+async def schedule_delays(
         eventloop: asyncio.unix_events._UnixSelectorEventLoop,
         function: FunctionType, argslist: list, interval: int = 39.0):
     """Schedule delayed calls of functions at a repeating interval.
@@ -83,7 +81,7 @@ def schedule_delays(
     counter = 1
     for arg in argslist:
         wait_time = interval - (time.time() % interval)
-        yield from asyncio.ensure_future(delay(wait_time, function, arg))
+        await asyncio.ensure_future(delay(wait_time, function, arg))
         print('Observation {} done...'.format(counter))
         counter += 1
     eventloop.stop()
