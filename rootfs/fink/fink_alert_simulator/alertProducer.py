@@ -1,4 +1,4 @@
-# Copyright 2019 AstroLab Software
+# Copyright 2019-2024 AstroLab Software
 # Author: Maria Patterson, Julien Peloton
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -121,7 +121,7 @@ class AlertProducer(object):
         self.producer = confluent_kafka.Producer(**kwargs)
         self.topic = topic
 
-    def send(self, data: dict, alert_schema: dict = None, encode: bool = False):
+    def send(self, data: dict, alert_schema: dict = None, partition: int = 0, encode: bool = False):
         """Sends a message to Kafka stream.
 
         You can choose to encode or not the message (using avro).
@@ -136,6 +136,8 @@ class AlertProducer(object):
             Data containing message content. If encode is True, expects JSON.
         alert_schema: dict, optional
             Avro schema for encoding data. Default is None.
+        partition: int, optional
+            The partition ID. Default is 0.
         encode : `boolean`, optional
             If True, encodes data to Avro format. If False, sends data raw.
             Default is False.
@@ -147,10 +149,10 @@ class AlertProducer(object):
             else:
                 avro_bytes = avroUtils.writeavrodata(data, alert_schema)
             raw_bytes = avro_bytes.getvalue()
-            self.producer.produce(self.topic, raw_bytes)
+            self.producer.produce(topic=self.topic, value=raw_bytes, partition=partition)
         else:
             data_str = "{}".format(data)
-            self.producer.produce(self.topic, data_str)
+            self.producer.produce(topic=self.topic, value=data_str, partition=partition)
 
     def flush(self):
         """ Publish message to the Kafka cluster.

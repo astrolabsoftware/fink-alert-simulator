@@ -1,4 +1,4 @@
-# Copyright 2019 AstroLab Software
+# Copyright 2019-2024 AstroLab Software
 # Author: Julien Peloton
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -89,6 +89,13 @@ def getargs(parser: argparse.ArgumentParser) -> argparse.Namespace:
         help="""
         If provided, the avro schema (.avsc) will be used to read alerts.
         [EXTERNAL_SCHEMA]
+        """
+    )
+    parser.add_argument(
+        '-npartitions', type=int, default=10,
+        help="""
+        The number of partitions in the Kafka cluster. Default is 10.
+        [NPARTITIONS]
         """
     )
     args = parser.parse_args(None)
