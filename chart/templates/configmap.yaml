@@ -45,6 +45,9 @@ data:
     # Path to external avro schema. 'None' if not required.
     EXTERNAL_SCHEMA='None'
 
+    # Number of partitions for the producer
+    NPARTITIONS=1
+
     simulate_stream \
       -servers ${KAFKA_IPPORT} \
       -topic ${KAFKA_TOPIC} \
@@ -53,5 +56,6 @@ data:
       -nobservations ${NOBSERVATIONS} \
       -nalerts_per_obs $NALERTS_PER_OBS \
       -external_schema=${EXTERNAL_SCHEMA} \
-      -to_display ${DISPLAY_FIELD}
+      -to_display ${DISPLAY_FIELD} \
+      -npartitions ${NPARTITIONS}
 
