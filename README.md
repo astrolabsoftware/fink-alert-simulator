@@ -8,7 +8,7 @@ Fork and/or clone the repo, and update your `PYTHONPATH` and `PATH` to use the t
 
 ```bash
 # in your ~/.bash_profile
-export FINK_ALERT_SIMULATOR=/path/to/fink-alert-simulator
+export FINK_ALERT_SIMULATOR=/path/to/fink-alert-simulator/rootfs/fink
 export PYTHONPATH=$FINK_ALERT_SIMULATOR:$PYTHONPATH
 export PATH=$FINK_ALERT_SIMULATOR/bin:$PATH
 ```
