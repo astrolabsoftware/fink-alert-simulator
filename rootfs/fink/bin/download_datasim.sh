@@ -21,7 +21,7 @@
 set -euxo pipefail
 
 data_subpath="datasim/basic_alerts/all_distribute_topics"
-datasim_path="/datasim"
+datasim_path=$FINK_ALERT_SIMULATOR/datasim
 workdir="/tmp/fink-alert-schemas"
 
 git clone --single-branch -b "v0.0.2-rc0" -n --depth=1 --filter=tree:0 \
