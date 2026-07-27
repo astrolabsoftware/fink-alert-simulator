@@ -118,6 +118,52 @@ class AlertProducer(object):
     def __init__(self, topic: str, schema_files: list = None, **kwargs):
         self.producer = confluent_kafka.Producer(**kwargs)
         self.topic = topic
+        self.delivery_failures = 0
+
+    def _on_delivery(self, err, msg):
+        """ Count the messages the broker never acknowledged.
+
+        librdkafka only enqueues messages locally and reports delivery errors
+        asynchronously. Without this callback, a broker that never answers
+        makes the producer drop the alerts silently, and the job still exits
+        with a success status.
+        """
+        if err is not None:
+            self.delivery_failures += 1
+
+    def wait_for_broker(self, timeout: float = 300, poll_sec: float = 5):
+        """ Wait for the Kafka cluster to answer a metadata request.
+
+        The simulator is deployed alongside Kafka and can start before it is
+        up. `confluent_kafka.Producer()` does not connect, so without this
+        the first alerts would silently expire in the local queue.
+
+        Parameters
+        ----------
+        timeout: float, optional
+            Give up after that many seconds. Default is 300.
+        poll_sec: float, optional
+            Time between two attempts, also used as the metadata request
+            timeout. Default is 5.
+
+        Raises
+        ------
+        IOError
+            If the cluster does not answer within `timeout` seconds.
+        """
+        deadline = time.time() + timeout
+        while True:
+            try:
+                self.producer.list_topics(timeout=poll_sec)
+            except confluent_kafka.KafkaException as exc:
+                if time.time() >= deadline:
+                    raise IOError(
+                        'Kafka cluster unreachable after {} seconds: {}'.format(
+                            timeout, exc))
+                print('Waiting for the Kafka cluster: {}'.format(exc))
+                time.sleep(poll_sec)
+            else:
+                return
 
     def send(self, data: dict, alert_schema: dict = None, partition: int = 0, encode: bool = False):
         """Sends a message to Kafka stream.
@@ -147,15 +193,34 @@ class AlertProducer(object):
             else:
                 avro_bytes = avroUtils.writeavrodata(data, alert_schema)
             raw_bytes = avro_bytes.getvalue()
-            self.producer.produce(topic=self.topic, value=raw_bytes, partition=partition)
+            self.producer.produce(
+                topic=self.topic, value=raw_bytes, partition=partition,
+                on_delivery=self._on_delivery)
         else:
             data_str = "{}".format(data)
-            self.producer.produce(topic=self.topic, value=data_str, partition=partition)
+            self.producer.produce(
+                topic=self.topic, value=data_str, partition=partition,
+                on_delivery=self._on_delivery)
 
-    def flush(self):
+    def flush(self, timeout: float = None):
         """ Publish message to the Kafka cluster.
+
+        Parameters
+        ----------
+        timeout: float, optional
+            Give up after that many seconds. Default is None, that is block
+            until every message has been either delivered or dropped -- with
+            an unreachable broker, that takes `message.timeout.ms`.
+
+        Returns
+        -------
+        out: int
+            Number of messages still in the queue. Delivery errors are not
+            counted here, they are reported by `self.delivery_failures`.
         """
-        return self.producer.flush()
+        if timeout is None:
+            return self.producer.flush()
+        return self.producer.flush(timeout)
 
 
 if __name__ == "__main__":

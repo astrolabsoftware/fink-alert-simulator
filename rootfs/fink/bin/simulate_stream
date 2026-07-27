@@ -40,6 +40,10 @@ def main():
     streamproducer = alertProducer.AlertProducer(
         args.topic, schema_files=None, **conf)
 
+    # The simulator is deployed alongside Kafka and can start before it is up.
+    # Producing into an unreachable cluster is silently lossy, so wait here.
+    streamproducer.wait_for_broker()
+
     if args.external_schema != 'None':
         schema = fastavro.schema.load_schema(args.external_schema)
 
@@ -196,6 +200,14 @@ def main():
             interval=args.tinterval_kafka))
     loop.run_forever()
     loop.close()
+
+    # Delivery errors are reported asynchronously by librdkafka, so they can
+    # only be checked here. Exiting with a success status after having lost
+    # alerts would leave the whole pipeline empty without any signal.
+    if streamproducer.delivery_failures > 0:
+        print('ERROR: {} alerts were not delivered to {}'.format(
+            streamproducer.delivery_failures, args.servers))
+        sys.exit(1)
 
 
 if __name__ == "__main__":
