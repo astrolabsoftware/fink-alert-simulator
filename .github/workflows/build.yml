@@ -73,7 +73,7 @@ jobs:
             echo "Using existing image ${{ needs.build.outputs.image }}"
           fi
       - name: Scan fink-alert-simulator image
-        uses: anchore/scan-action@v3
+        uses: anchore/scan-action@v7
         id: scan
         with:
           image: "${{ needs.build.outputs.image }}"
