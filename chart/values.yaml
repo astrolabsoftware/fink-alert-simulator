@@ -11,4 +11,4 @@ image:
 kafka:
   socket: "kafka-cluster-kafka-bootstrap.kafka:9092"
   # TODO check that topic exists before sending alerts
-  topic: "ztf_public_20200101"
+  topic: "sim_ztf_public_20200101"
